@@ -1,6 +1,5 @@
 # su26-ai301-contribution
-# Contribution [#1265]: [Replace raw Tailwind colors with semantic names
-]
+# Contribution [#1265]: [Replace raw Tailwind colors with semantic names]
 
 **Contribution Number:** [1265]  
 **Student:** [Yifei Feng]  
