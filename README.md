@@ -1,16 +1,26 @@
 # su26-ai301-contribution
-# Contribution [#]: [Issue Title]
+# Contribution [#1265]: [Replace raw Tailwind colors with semantic names
+]
 
-**Contribution Number:** [1 / 2 / 3]  
-**Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
-**Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
+**Contribution Number:** [1265]  
+**Student:** [Yifei Feng]  
+**Issue:** [[GitHub issue link](https://github.com/SwitchbackTech/compass-calendar/issues/1265)]  
+**Status:** [Phase I x / Phase II / Phase III / Phase IV] [In Progress x / Complete]
 
 ---
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
+I choosed Issue #12345 "Replace raw Tailwind colors with semantic names" because it is a simple issue and has a detailed issue description listed how to solve this issue. It is labeled as "good first issue".
+I'm interested in this because:
+1. It is a easy issue for beginner to learn the open source contribution works and I do not need much time to study tech stacks.
+2. The related tech stack is frontend, and I have previous experience that can help me handle potential issue.
+3. The maintainer add "Milestone: Jan-Mar 2026" that shows they are actively maintaining this project, and there is no PR or assigned developer.
+
+From reading the issue thread, I understand the current problem is that  all instances of the raw Tailwind color color-blue-gray-100 need to be replaced  with an appropriate semantic color variable throughout the codebase. My contribution will improve the code maintainability and readability.
+
+Left a comment on the issue introducing myself, but the maintainer doesn't confirme it's 
+still open and pointed me toward the relevant code yet.
 
 ---
 
