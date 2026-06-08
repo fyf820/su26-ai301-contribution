@@ -12,7 +12,7 @@
 
 I choosed Issue #12345 "Replace raw Tailwind colors with semantic names" because it is a simple issue and has a detailed issue description listed how to solve this issue. It is labeled as "good first issue".
 I'm interested in this because:
-1. It is a easy issue for beginner to learn the open source contribution works and I do not need much time to study tech stacks.
+1. It is a easy issue for beginner to learn how the open source contribution works and I do not need much time to study tech stacks.
 2. The related tech stack is frontend, and I have previous experience that can help me handle potential issue.
 3. The maintainer add "Milestone: Jan-Mar 2026" that shows they are actively maintaining this project, and there is no PR or assigned developer.
 
