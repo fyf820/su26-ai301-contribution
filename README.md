@@ -216,38 +216,34 @@ Do NOT remove yet—keep as fallback for other potential usages
 If theme.ts needs new exports, add gradientAccentLightEnd to DefaultTheme type
 Or reference existing gradient tokens consistently
 
-**Implement:** [Link to your branch/commits as you work]
+**Implement:** [Link to branch](https://github.com/fyf820/compass-calendar/tree/refactor/replace-raw-tailwind-colors-with-semantic-names)
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+**Review:** 
+I followed the CONTRUIBUTING.md, and give this file and AGENTS.md to Claude to help me finish this fix. I also asked Claude using it to check if I followed the rules, it helped me to fix my commit format.
 
-**Evaluate:** [How will you verify it works?]
+**Evaluate:** I will asked the code to run AGENTS.md to check if the variables are changed, because the AGENTS.md add an instruction "New web styles should use Tailwind semantic colors from `packages/web/src/index.css`", the AI would go to check if codes meet this instruction.
 
 ---
 
 ## Testing Strategy
 
 ### Unit Tests
-
-- [ ] Test case 1: [Description]
-- [ ] Test case 2: [Description]
-- [ ] Test case 3: [Description]
+No need in this fix.
 
 ### Integration Tests
-
-- [ ] Integration scenario 1
-- [ ] Integration scenario 2
+No need in this fix.
 
 ### Manual Testing
 
-[What you tested manually and results]
+I run the application to check if the UI was changed because of my modification. I also run bun test, which is a test of the project's frontend web. It has some failures, but I reviewed them and foun they are unrelated to my changes. They are issues caused by the upstream.
 
 ---
 
 ## Implementation Notes
 
-### Week [X] Progress
+### Week [3] Progress
 
-[What you built this week, challenges faced, decisions made]
+I asked AI to help me fix the issue because it is hard to find all the related files in this project, I checked the AI's revisions and explanations to verify they meet the CONTRIBUTING.md. I got some merge conflicts in index.css during this work, I accepted the current merge and revised my fix. 
 
 ### Week [Y] Progress
 
@@ -255,9 +251,30 @@ Or reference existing gradient tokens consistently
 
 ### Code Changes
 
-- **Files modified:** [List]
-- **Key commits:** [Links to important commits]
-- **Approach decisions:** [Why you chose certain approaches]
+- **Files modified:**
+- bun.lock
+- packages/scripts/src/lint/no-raw-tailwind-colors.ts
+- packages/web/src/common/styles/colors.ts
+- packages/web/src/components/Shortcuts/ShortcutHint.tsx
+- packages/web/src/index.css
+- packages/web/src/views/Day/components/AddTask/AddTaskActiveButton.tsx
+- packages/web/src/views/Day/components/AddTask/AddTaskPreviewButton.tsx
+- packages/web/src/views/Day/components/ContextMenu/BaseContextMenu.tsx
+- packages/web/src/views/Day/components/Icons/TaskCircleIcon.tsx
+- packages/web/src/views/Day/components/Shortcuts/ShortcutTip.tsx
+- packages/web/src/views/Day/components/Task/Task.tsx
+- packages/web/src/views/Day/components/TaskList/TaskList.tsx
+- packages/web/src/views/Day/components/TaskList/TaskListHeader.tsx
+- packages/web/src/views/Day/components/Toasts/MigrationToast/MigrationToast.tsx
+- packages/web/src/views/Day/components/Toasts/UndoToast/UndoDeleteToast.tsx
+  
+- **Key commits:**
+- [1](https://github.com/SwitchbackTech/compass-calendar/commit/d33f868bb03ef27940dcc78366e4f82537bcbe24)
+- [2](https://github.com/SwitchbackTech/compass-calendar/commit/9d6aac2f4ba520eb8c15443bc15a38be880879d3)
+- [3](https://github.com/SwitchbackTech/compass-calendar/commit/a8ab648fc1b4a2be5227d85db146ed73c4cb360d)
+- [4](https://github.com/SwitchbackTech/compass-calendar/commit/7b61ad96541fd862aac73c46121b6f342ca24ce5)
+- **Approach decisions:** 
+This approach can fix related semantic names and meet the guide of the issue description. It also meets the CONTRUIBUTING.md and AGENTS.md requirements.
 
 ---
 
