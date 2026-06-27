@@ -280,15 +280,59 @@ This approach can fix related semantic names and meet the guide of the issue des
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when submitted]
+**PR Link:** [GitHub PR URL](https://github.com/SwitchbackTech/compass-calendar/pull/1891)
 
-**PR Description:** [Draft or final PR description - much of the content above can be adapted]
+**PR Description:** [Final PR description]
+## Description
+
+ [#1265](https://github.com/SwitchbackTech/compass-calendar/issues/1265)
+
+Replaces all raw Tailwind palette color classes (e.g. `bg-gray-700`,
+`text-blue-200`) throughout the web package with semantic token classes
+from `index.css`, and adds a lint script to catch future violations.
+
+## Changes
+
+- **`colors.ts`**: Fixed duplicate `blue100` key — renamed second entry
+  to `blueGray100` (was `undefined` at runtime); fixed missing `/` alpha
+  separator in `gray700` HSL value
+- **`index.css`**: Added two new semantic tokens:
+  `--compass-color-kbd-bg` (keycap/badge backgrounds) and
+  `--compass-color-interactive-accent` (interactive element accent)
+- **10 TSX files**: Replaced all raw classes (`bg-gray-700`, `text-gray-300`,
+  `border-gray-600`, `bg-blue-200/*`, `bg-darkBlue-400`, `text-white-100`,
+  etc.) with their semantic equivalents
+- **`packages/scripts/src/lint/no-raw-tailwind-colors.ts`**: New lint
+  script that errors on any remaining raw palette class usage in `.tsx`
+  files, integrated with `bun lint`
+
+## Type of Change
+
+- [x] Refactor (non-breaking change that improves code maintainability)
+
+## Testing
+
+- [ ] `bun test:web` passes
+- [ ] `bun type-check` passes
+- [ ] `bun lint` passes (no raw color violations)
+- [ ] Manually verified UI appearance is unchanged in the Day view task
+  panel, shortcut hints, toast notifications, and context menus
+
+## Checklist
+
+- [x] No new raw Tailwind palette colors introduced
+- [x] Semantic token names follow the `compass-color-*` prefix convention
+- [x] Lint script added to prevent regression
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 **Maintainer Feedback:**
 - [Date]: [Summary of feedback received]
 - [Date]: [How you addressed it]
 
-**Status:** [Awaiting review / Iterating / Approved / Merged]
+Since the maintainer mentioned that they are only receive internal contruibutor, they are not likely receive my PR. I'll keep track of it if they replied me.
+
+**Status:** [Awaiting review x/ Iterating / Approved / Merged]
 
 ---
 
@@ -296,20 +340,18 @@ This approach can fix related semantic names and meet the guide of the issue des
 
 ### Technical Skills Gained
 
-[What you learned technically]
+I have learned the prompting skills about how to work with AI with a detailed documentation. The AGENTS.md helps me a lot to guide AI to solve issues, that is a great example.
 
 ### Challenges Overcome
 
-[What was hard and how you solved it]
+This issue has a lot of related files because of the change of variable names. I used AI to help me find and fix them, then audit them. That help me save a lot of time because this project codebase is huge. Also, this project has a very detailed CONTRIBUTING.md, it is hard to follow everything and I used AI to help me check if I followed the requirements for each step.
 
 ### What I'd Do Differently Next Time
 
-[Reflection on your process]
+I'll read the CONTRUIBUTION/README first to make sure that I can work on this project.
 
 ---
 
 ## Resources Used
 
-- [Link to helpful documentation]
-- [Tutorial or Stack Overflow post that helped]
-- [GitHub issues or discussions that helped]
+The project has a very detailed documentations, such as README.md, CONTRIBUTING.md, AGENTS.md, and agents skills documentation including CodeX, Cursor, and Claude. They are very helpful to fix issue and leran the processes.
