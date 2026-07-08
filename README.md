@@ -330,9 +330,9 @@ from `index.css`, and adds a lint script to catch future violations.
 - [Date]: [Summary of feedback received]
 - [Date]: [How you addressed it]
 
-Since the maintainer mentioned that they are only receive internal contruibutor, they are not likely receive my PR. I'll keep track of it if they replied me.
+Since the maintainer mentioned that they are only receive internal contruibutor, they rejected my PR.
 
-**Status:** [Awaiting review x/ Iterating / Approved / Merged]
+**Status:** [Rejected]
 
 ---
 
