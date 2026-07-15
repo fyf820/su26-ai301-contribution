@@ -9,7 +9,7 @@
 
 ## Why I Chose This Issue
 
-I chose this issue because it fits well with my interests in software testing and skill of JavaScript/TypeScript development. The problem is clearly scoped, the repository appears actively maintained, and the issue provides a practical opportunity to improve reliability through focused unit tests. I also reviewed the contribution guidelines and recent project activity to confirm that this would be a suitable first contribution.
+I chose this issue because it directly matches my strongest skill area — writing focused unit tests in TypeScript/Jest — while giving me a low-risk entry point into a real, actively maintained codebase (DollhouseMCP/mcp-server ships regular releases and has clear contribution docs). My learning goal is to get comfortable testing filesystem side effects and environment-variable mutation safely (temp directories, `HOME` overrides, singleton resets), a pattern I hadn't tested in isolation before. The issue itself is well-scoped: the maintainer already enumerated the exact functions and scenarios to cover, so I can validate my understanding of the existing `test-setup.ts` implementation before writing any test, rather than reverse-engineering requirements from a vague bug report. It's also unassigned with no open PR, so it's currently claimable.
 
 ---
 
@@ -17,22 +17,32 @@ I chose this issue because it fits well with my interests in software testing an
 
 ### Problem Description
 
-The repository currently lacks dedicated unit tests for the portfolio test setup utilities in test/__tests__/unit/portfolio/test-setup.ts. That means important behaviors such as temporary directory creation, HOME environment restoration, suite directory cleanup, and singleton reset logic are not being exercised in isolation. Without these tests, regressions could slip into the project and make future maintenance more difficult.
+`test/__tests__/unit/portfolio/test-setup.ts` provides shared test-isolation utilities (`setupTestEnvironment`, `cleanupTestEnvironment`, `clearSuiteDirectory`, `resetSingletons`) that were introduced in [PR #1095](https://github.com/DollhouseMCP/mcp-server/pull/1095) to fix file-system pollution between test runs, but the utilities themselves have no dedicated unit tests. That matters because these helpers manipulate global, hard-to-observe state — temp directories and the `HOME` environment variable — so a silent regression here (e.g., `HOME` not restored, or a suite directory deleted mid-run) could reintroduce the exact cross-test pollution bug #1095 was meant to fix, and the failure would likely surface as a flaky, hard-to-diagnose test elsewhere in the suite rather than in this file. I chose to work on it because it's a self-contained, well-defined testing task that lets me practice mocking `fs`/`os`/`process.env` without touching production application logic.
 
 ### Expected Behavior
 
-The goal is to add thorough unit tests covering the behavior of the setup and cleanup helpers in the portfolio test setup module. These tests should verify correct directory handling, environment variable restoration, cleanup rules, error handling, and singleton reset behavior.
+Add unit tests covering: directory creation and structure (`.dollhouse/portfolio`), `HOME` override/restore, suite-directory reuse vs. fresh creation, cleanup behavior (`cleanupFiles` true/false), suite directories surviving individual test cleanup, graceful error handling during cleanup, `clearSuiteDirectory()` cache reset, and `resetSingletons()` including dynamic-import failure handling. See the [full acceptance checklist](#testing-strategy) below, adapted directly from the issue's suggested test coverage.
 
 ### Current Behavior
 
-The relevant test file does not currently have its own focused unit test coverage, so the expected behaviors are not formally verified.
+`test-setup.ts` has no dedicated test file, so none of the behaviors above are formally verified — regressions in directory handling or environment restoration would only be caught indirectly (or not at all) via failures in unrelated test suites.
 
 ### Affected Components
 
-- test/__tests__/unit/portfolio/test-setup.ts
-- Portfolio test setup utilities responsible for temporary directory lifecycle management
-- Test helpers related to HOME environment restoration and suite directory cleanup
+- `test/__tests__/unit/portfolio/test-setup.ts` — the module under test (no existing spec file for it)
+- `setupTestEnvironment()` — temp directory creation, `.dollhouse/portfolio` structure, `HOME` override, suite-directory reuse logic
+- `cleanupTestEnvironment()` — `HOME` restoration, conditional temp-directory removal, suite-directory protection during per-test cleanup
+- `clearSuiteDirectory()` — suite-directory removal and cache reset
+- `resetSingletons()` — singleton reset via dynamic import, including ESM import-failure handling
+- Related: [PR #1095](https://github.com/DollhouseMCP/mcp-server/pull/1095) (original test-isolation fix these utilities implement)
 
+### Acceptance Criteria (what "fixed" looks like)
+
+- [ ] Every function/scenario listed in issue #1096 has at least one corresponding unit test
+- [ ] Tests pass in isolation and when run in parallel with the rest of the suite (no shared-state leakage)
+- [ ] `HOME` is verifiably restored to its original value after both success and error paths
+- [ ] Suite-directory reuse vs. cleanup semantics are each covered by a dedicated test (not conflated)
+- [ ] New tests run cleanly in CI with no flake across repeated runs
 
 ---
 
