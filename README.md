@@ -120,6 +120,8 @@ $ cd packages/web &&bun run dev.ts
 
 The issue is rooted in a design-system inconsistency rather than a single functional defect. The raw color constant `blueGray100` is defined and reused across several frontend styling modules, which bypasses the semantic token structure that the project is already using elsewhere. This makes the palette harder to maintain and creates a mismatch with the repository’s documented styling guidance.
 
+**Root cause:** `blueGray100` was introduced in `colors.ts` before the semantic token layer (`index.css`) existed, and no lint rule enforced token usage afterward—so it was never migrated when the token system was added. This plan replaces its usages in `colors.ts`, `theme.util.ts`, `theme.ts`, and `toast.constants.ts`, and adds a lint rule (`no-raw-tailwind-colors.ts`) to prevent recurrence.
+
 ### Proposed Solution
 
 Replace all 5 usages of the raw color `blueGray100` with references to the existing semantic token `--color-gradient-accent-light-end`. This approach:
@@ -254,7 +256,15 @@ This approach can fix related semantic names and meet the guide of the issue des
 
 ## Description
 
-[#1265](https://github.com/SwitchbackTech/compass-calendar/issues/1265)
+Closes [#1265](https://github.com/SwitchbackTech/compass-calendar/issues/1265)
+
+Compass is moving toward a hybrid Tailwind + styled-components theming
+strategy, but raw Tailwind palette values (e.g. `blue-gray-100`,
+`gray-700`) are still hard-coded across the web package instead of
+routed through semantic tokens. That makes light/dark theming
+inconsistent, forces the same color to be updated in multiple places
+whenever the palette or branding changes, and leaves no guardrail to
+stop the next raw-color usage from being added.
 
 This PR replaces raw Tailwind palette color classes throughout the web package with semantic token classes from the design system and adds a linting check to help prevent future violations.
 
@@ -295,12 +305,10 @@ This PR replaces raw Tailwind palette color classes throughout the web package w
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 **Maintainer Feedback:**
-- [Date]: [Summary of feedback received]
-- [Date]: [How you addressed it]
+- **2026-06-30** ([PR #1891 comment](https://github.com/SwitchbackTech/compass-calendar/pull/1891)): Maintainer `tyler-dane` rejected the PR, citing the project's updated policy toward "driveby AI PRs": *"Thanks for taking the time. However, I'm going to have to reject this. Please see CONTRIBUTING.md."*
+- **2026-06-30**: No follow-up commits were made in response—the rejection was based on the updated contributor policy itself (not the code), so there was nothing in the diff to revise. The PR was closed as rejected at commit [7b61ad9](https://github.com/SwitchbackTech/compass-calendar/commit/7b61ad96541fd862aac73c46121b6f342ca24ce5), the last commit pushed before the feedback.
 
-Since the maintainer mentioned that they are only receive internal contruibutor, they rejected my PR.
-
-**Status:** [Rejected]
+**Status:** Rejected
 
 ---
 
