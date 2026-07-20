@@ -3,7 +3,7 @@
 **Contribution Number:** 2  
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
-**Status:** Phase I Complete / Phase II In Progress
+**Status:** Phase I Complete / Phase II Complete
 
 ---
 
@@ -75,7 +75,7 @@ This issue is a missing-test-coverage request, not a bug, so there's no faulty b
 
 ### Reproduction Evidence
 
-- **Commit showing reproduction:** https://github.com/fyf820/mcp-server
+- **Commit showing reproduction:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
 - **Screenshots/logs:**
 ```
 [jest.config] --experimental-vm-modules not detected; using CJS fallback transform
@@ -95,30 +95,35 @@ Confirmed test-setup.ts has zero direct test coverage; all four exported functio
 
 ### Analysis
 
-[Your analysis of the root cause - what's causing the issue?]
+The root cause is a coverage gap. `test-setup.ts` is a *test-infrastructure* module, so it was never wired into the normal "add code → add spec" workflow that CI enforces for `src/`. It mutates two kinds of hard-to-observe global state (`process.env.HOME` and a module-level `suiteDirectory` cache) and touches the real filesystem, which is exactly the kind of code that's easy to skip testing, but where a silent regression is expensive: it would surface as flaky failures in *other* suites rather than a clear failure here. 
 
 ### Proposed Solution
 
-[High-level description of your fix approach]
+Add a new, self-contained spec file `test/__tests__/unit/portfolio/test-setup.test.ts` that imports the four exported functions directly and exercises each real filesystem/env-var effect (no mocking of `fs`/`os`/`process.env`, since the whole point is verifying the actual temp-directory and `HOME` side effects). Each test saves and restores `process.env.HOME` in `beforeEach`/`afterEach` and calls `clearSuiteDirectory()` in `afterEach` so the module-level suite cache never leaks between tests — this was the exact class of cross-test pollution PR #1095 was fixing, so the new spec has to be scrupulous about not reintroducing it.
 
 ### Implementation Plan
 
 Using UMPIRE framework (adapted):
 
-**Understand:** [Restate the problem]
+**Understand:** `test-setup.ts` exports four functions with no dedicated tests: `setupTestEnvironment()` (temp dir + `.dollhouse/portfolio` creation, `HOME` override, suite-directory reuse), `cleanupTestEnvironment()` (`HOME` restore, conditional removal, suite-directory protection), `clearSuiteDirectory()` (suite dir removal + cache reset), and `resetSingletons()` (dynamic import + singleton reset). The issue asks for unit coverage of every listed function/scenario.
 
-**Match:** [What similar patterns/solutions exist in the codebase?]
+While reading the implementation to plan the tests, I also found that `resetSingletons()` sets `.instance = null` on `EnhancedIndexManager`, `IndexConfigManager`, `VerbTriggerManager`, and `RelationshipManager` via a cast to a `SingletonClass` interface — but none of those four classes currently declare a static `instance` property (confirmed by grepping each source file). The assignment is legal only because of the `as unknown as SingletonClass` cast; at runtime it just adds a stray property to the class and resets nothing. This doesn't block writing tests (the function still resolves without throwing, which is itself worth asserting), but it means "resetSingletons() resets all singleton instances" can only be tested as "does not throw / dynamic imports succeed," not as a true reset-and-reinitialize check — I'll flag this as a note rather than silently asserting behavior that isn't actually there.
 
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
+**Match:** Followed the conventions already used by sibling specs in the same directory (e.g. `EnhancedIndexManager.telemetry.test.ts`): `@jest/globals` imports, `os.tmpdir()`-based real temp directories created/torn down per test, and `.js`-suffixed relative imports (ESM). No existing spec mocks `fs`/`os` in this directory, so the new tests follow that same real-filesystem style rather than introducing mocks.
 
-**Implement:** [Link to your branch/commits as you work]
+**Plan:**
+1. Create `test/__tests__/unit/portfolio/test-setup.test.ts`.
+2. `setupTestEnvironment`: assert temp dir creation + `.dollhouse/portfolio` structure, `HOME` override, returned original `HOME`, suite-directory reuse when `reuseSuiteDirectory=true`, and fresh-directory creation when `false`.
+3. `cleanupTestEnvironment`: assert `HOME` restoration, conditional removal (`cleanupFiles` true/false), that suite directories survive per-test cleanup, and that cleanup doesn't throw when the directory is already gone.
+4. `clearSuiteDirectory`: assert removal + cache reset (a later `setupTestEnvironment(true)` gets a fresh dir), graceful no-op when no suite directory is active, and graceful handling when the directory was already removed out-of-band.
+5. `resetSingletons`: assert it resolves without throwing across repeated calls (see Understand note on the `instance` property no longer existing on the target classes).
+6. Run the new spec in isolation, then run the full unit suite to confirm no leakage into unrelated tests.
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+**Implement:** Branch `feature/1096-test-setup-utils-coverage` and new file `test/__tests__/unit/portfolio/test-setup.test.ts`.
 
-**Evaluate:** [How will you verify it works?]
+**Review:** Matches `CONTRIBUTING.md`'s branch-naming convention (`feature/` prefix); adds only test code, no changes to `src/`; follows existing directory conventions instead of introducing new patterns (e.g. mocking) unnecessarily; each test cleans up its own filesystem state so the suite stays isolated per PR #1095's intent.
+
+**Evaluate:** Run the new spec in isolation and confirm every case in the Testing Strategy checklist below passes, then run the full unit suite (`npm test`) to confirm the new spec doesn't leak state into or otherwise regress the suites that already import these utilities.
 
 ---
 
@@ -126,18 +131,31 @@ Using UMPIRE framework (adapted):
 
 ### Unit Tests
 
-- [ ] Test case 1: [Description]
-- [ ] Test case 2: [Description]
-- [ ] Test case 3: [Description]
+`test/__tests__/unit/portfolio/test-setup.test.ts`, 15 planned test cases across the four exported functions:
+
+- [ ] `setupTestEnvironment`: creates a unique temp dir with `.dollhouse/portfolio` structure and overrides `HOME`
+- [ ] `setupTestEnvironment`: creates a different directory on each call when `reuseSuiteDirectory=false`
+- [ ] `setupTestEnvironment`: reuses the suite directory across calls when `reuseSuiteDirectory=true`
+- [ ] `setupTestEnvironment`: creates a fresh directory when `reuseSuiteDirectory=false` even after a suite directory already exists
+- [ ] `cleanupTestEnvironment`: restores the original `HOME` value
+- [ ] `cleanupTestEnvironment`: removes the temp directory when `cleanupFiles=true`
+- [ ] `cleanupTestEnvironment`: skips removal when `cleanupFiles=false`
+- [ ] `cleanupTestEnvironment`: does not delete the suite directory during individual test cleanup
+- [ ] `cleanupTestEnvironment`: does not throw when the directory is already gone
+- [ ] `clearSuiteDirectory`: removes the suite directory when `cleanupFiles=true`
+- [ ] `clearSuiteDirectory`: resets the cache so a later call creates a fresh directory
+- [ ] `clearSuiteDirectory`: no-ops gracefully when there's no active suite directory
+- [ ] `clearSuiteDirectory`: doesn't throw when the directory was already removed out-of-band
+- [ ] `resetSingletons`: resolves without throwing on a single call
+- [ ] `resetSingletons`: resolves without throwing across repeated calls
 
 ### Integration Tests
 
-- [ ] Integration scenario 1
-- [ ] Integration scenario 2
+Not applicable for this issue
 
 ### Manual Testing
 
-[What you tested manually and results]
+Run the new spec directly against the unit test config, then against the full unit suite, and confirm all 15 planned cases pass with no regressions elsewhere:
 
 ---
 
