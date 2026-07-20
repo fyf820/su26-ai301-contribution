@@ -75,7 +75,7 @@ This issue is a missing-test-coverage request, not a bug, so there's no faulty b
 
 ### Reproduction Evidence
 
-- **Commit showing reproduction:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
+- **Commit showing reproduction:** https://github.com/fyf820/mcp-server/tree/test/1096-test-setup-utils-coverage
 - **Screenshots/logs:**
 ```
 [jest.config] --experimental-vm-modules not detected; using CJS fallback transform
