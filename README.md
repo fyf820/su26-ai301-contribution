@@ -3,7 +3,7 @@
 **Contribution Number:** 2  
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
-**Status:** Phase I Complete / Phase II Complete
+**Status:** Phase I Complete / Phase II Complete / Phase II In Progress 
 
 ---
 
@@ -161,9 +161,16 @@ Run the new spec directly against the unit test config, then against the full un
 
 ## Implementation Notes
 
-### Week [X] Progress
+### Week 7 Progress
 
 [What you built this week, challenges faced, decisions made]
+
+Built test/__tests__/unit/portfolio/test-setup.test.ts, starting with full coverage of setupTestEnvironment() (7 tests: unique temp directory creation, directory-name format incorporating PID/timestamp/random, .dollhouse/portfolio structure, HOME override, returned original HOME, suite-directory reuse, and fresh-directory creation when reuse is off)
+
+The project's Jest config requires `--experimental-vm-modules` for ESM support; running npx jest directly (rather than through the npm test script) failed until I found and used the correct `cross-env/NODE_OPTIONS` invocation from package.json.
+
+My first version of the "reuses the suite directory" test asserted `home1 === home2` across two calls, but setupTestEnvironment() doesn't restore HOME itself. Ao the second call's "original HOME" is actually the suite temp dir left over from the first call, not the real original. Had to trace through the implementation logic rather than assuming symmetric behavior, then fix the assertion to check `home2 === tempDir1` instead.
+
 
 ### Week [Y] Progress
 
