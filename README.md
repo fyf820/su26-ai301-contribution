@@ -3,7 +3,8 @@
 **Contribution Number:** 2  
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
-**Status:** Phase I Complete / Phase II Complete / Phase III In Progress 
+**Working Branch:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
+**Status:** Phase I Complete / Phase II Complete / Phase III Done / Phase IV In Progress 
 
 ---
 
@@ -131,23 +132,34 @@ While reading the implementation to plan the tests, I also found that `resetSing
 
 ### Unit Tests
 
-`test/__tests__/unit/portfolio/test-setup.test.ts`, 15 planned test cases across the four exported functions:
+`test/__tests__/unit/portfolio/test-setup.test.ts`, 24 test cases across the four exported functions plus the issue's additional scenarios:
 
-- [ ] `setupTestEnvironment`: creates a unique temp dir with `.dollhouse/portfolio` structure and overrides `HOME`
-- [ ] `setupTestEnvironment`: creates a different directory on each call when `reuseSuiteDirectory=false`
-- [ ] `setupTestEnvironment`: reuses the suite directory across calls when `reuseSuiteDirectory=true`
-- [ ] `setupTestEnvironment`: creates a fresh directory when `reuseSuiteDirectory=false` even after a suite directory already exists
-- [ ] `cleanupTestEnvironment`: restores the original `HOME` value
-- [ ] `cleanupTestEnvironment`: removes the temp directory when `cleanupFiles=true`
-- [ ] `cleanupTestEnvironment`: skips removal when `cleanupFiles=false`
-- [ ] `cleanupTestEnvironment`: does not delete the suite directory during individual test cleanup
-- [ ] `cleanupTestEnvironment`: does not throw when the directory is already gone
-- [ ] `clearSuiteDirectory`: removes the suite directory when `cleanupFiles=true`
-- [ ] `clearSuiteDirectory`: resets the cache so a later call creates a fresh directory
-- [ ] `clearSuiteDirectory`: no-ops gracefully when there's no active suite directory
-- [ ] `clearSuiteDirectory`: doesn't throw when the directory was already removed out-of-band
-- [ ] `resetSingletons`: resolves without throwing on a single call
-- [ ] `resetSingletons`: resolves without throwing across repeated calls
+- [x] `setupTestEnvironment`: creates a unique temporary directory
+- [x] `setupTestEnvironment`: generates a unique directory name incorporating PID, timestamp, and random components
+- [x] `setupTestEnvironment`: sets up the proper directory structure (`.dollhouse/portfolio`)
+- [x] `setupTestEnvironment`: overrides the `HOME` environment variable correctly
+- [x] `setupTestEnvironment`: returns the original `HOME` value
+- [x] `setupTestEnvironment`: reuses the suite directory across calls when `reuseSuiteDirectory=true`
+- [x] `setupTestEnvironment`: creates a new directory when `reuseSuiteDirectory=false`
+- [x] `cleanupTestEnvironment`: restores the original `HOME` value
+- [x] `cleanupTestEnvironment`: removes the temp directory when `cleanupFiles=true`
+- [x] `cleanupTestEnvironment`: skips removal when `cleanupFiles=false`
+- [x] `cleanupTestEnvironment`: does not delete the suite directory during individual test cleanup
+- [x] `cleanupTestEnvironment`: handles cleanup errors gracefully
+- [x] `clearSuiteDirectory`: removes the suite directory when `cleanupFiles=true`
+- [x] `clearSuiteDirectory`: resets the cache so a later call creates a fresh directory
+- [x] `clearSuiteDirectory`: handles a missing directory gracefully when no suite directory is active
+- [x] `clearSuiteDirectory`: handles cleanup errors gracefully when the suite directory was already removed
+- [x] `resetSingletons`: successfully resets all singleton instances (verified via `.instance === null` on each target class)
+- [x] `resetSingletons`: works with the ES module dynamic import context
+- [x] `resetSingletons`: can be called multiple times in a row without error
+- [x] Parallel test execution: creates distinct, collision-free directories when `setupTestEnvironment` is called concurrently
+- [x] Error handling and recovery: remains usable after a consumer throws between setup and cleanup
+- [x] Error handling and recovery: does not delete the suite directory if a consumer throws before calling cleanup
+- [x] Environment variable restoration: restores `HOME` via `cleanupTestEnvironment` even when the consumer throws
+- [x] Environment variable restoration: leaves `HOME` restorable even when the temp directory was already removed out-of-band
+
+Note: no test asserts `resetSingletons()` "handles dynamic import failures gracefully" — the actual implementation has no `try`/`catch` around its dynamic imports, so a failed import would propagate rather than being handled. Testing coverage reflects the real implementation rather than that assumption from the issue text.
 
 ### Integration Tests
 
@@ -163,24 +175,44 @@ Run the new spec directly against the unit test config, then against the full un
 
 ### Week 7 Progress
 
-[What you built this week, challenges faced, decisions made]
+Built `test/__tests__/unit/portfolio/test-setup.test.ts` with full coverage of `setupTestEnvironment()` (7 tests: unique temp directory creation, PID/timestamp/random naming, `.dollhouse/portfolio` structure, `HOME` override, returned original `HOME`, suite-directory reuse, fresh-directory creation when reuse is off).
 
-Built test/__tests__/unit/portfolio/test-setup.test.ts, starting with full coverage of setupTestEnvironment() (7 tests: unique temp directory creation, directory-name format incorporating PID/timestamp/random, .dollhouse/portfolio structure, HOME override, returned original HOME, suite-directory reuse, and fresh-directory creation when reuse is off)
+- **Jest ESM config:** Running `npx jest` directly failed — the project's Jest config needs `--experimental-vm-modules`. Fixed by using the `cross-env`/`NODE_OPTIONS` invocation from `package.json`.
+- **Bug in my own test:** First version of the "reuses suite directory" test asserted `home1 === home2` across two calls, but `setupTestEnvironment()` never restores `HOME` itself — so the second call's "original `HOME`" is actually the leftover suite temp dir from the first call. Fixed the assertion to check `home2 === tempDir1` after tracing through the implementation.
 
-The project's Jest config requires `--experimental-vm-modules` for ESM support; running npx jest directly (rather than through the npm test script) failed until I found and used the correct `cross-env/NODE_OPTIONS` invocation from package.json.
+### Week 8 Progress
 
-My first version of the "reuses the suite directory" test asserted `home1 === home2` across two calls, but setupTestEnvironment() doesn't restore HOME itself. Ao the second call's "original HOME" is actually the suite temp dir left over from the first call, not the real original. Had to trace through the implementation logic rather than assuming symmetric behavior, then fix the assertion to check `home2 === tempDir1` instead.
+Extended the spec to cover the remaining three functions plus the issue's "Additional Test Scenarios," growing the suite from 7 to 24 tests:
 
+- **`cleanupTestEnvironment()`** (5 tests): `HOME` restoration, conditional removal for both `cleanupFiles` values, suite-directory protection during per-test cleanup, graceful handling when the directory is already gone.
+- **`clearSuiteDirectory()`** (4 tests): removal, cache reset (confirmed a later call creates a genuinely new directory), graceful no-ops when no suite directory is active or it was already removed out-of-band.
+- **`resetSingletons()`** (3 tests): resolves without throwing, works across repeated calls, and verifies the real postcondition (`.instance === null` on each target class) rather than the issue's "successfully resets all singleton instances" framing.
+- **Additional scenarios** (5 tests): collision-free directory names under concurrent `setupTestEnvironment()` calls, recovery after a consumer throws between setup and cleanup, `HOME` restoration guarantees even on mid-test errors.
 
-### Week [Y] Progress
+**Challenges:**
 
-[Continue documenting as you work]
+- `resetSingletons()` sets `.instance = null` on `EnhancedIndexManager`, `IndexConfigManager`, `VerbTriggerManager`, and `RelationshipManager` via a cast to a `SingletonClass` interface — but none of those classes declare a static `instance` property (confirmed by grepping each source file). The cast compiles but resets nothing meaningful at runtime. Tested the real, verifiable behavior instead of the issue's assumed framing, and skipped the "handles dynamic import failures gracefully" case since there's no try/catch to exercise.
+- The concurrency test initially asserted an exact count of 8 new directories after 8 concurrent `setupTestEnvironment(false)` calls, and flaked at 24. Root cause: `os.tmpdir()` is a shared OS resource — other Jest processes writing into the same `dollhouse-test-` prefix during the test window add unrelated entries. Fixed by asserting `created.length >= concurrency` plus a uniqueness check on the created set, and documented why in a code comment so it doesn't get "fixed" back to a flaky exact-count assertion.
+- Found and cleaned up 36 leftover `dollhouse-test-*` directories from earlier interrupted manual runs — clutter from this session, not an implementation defect.
+
+**Decisions:** Where the issue's suggested test description didn't match actual behavior (`resetSingletons`'s dead `instance` property, the flaky exact-count assertion), wrote tests against verified real behavior rather than encoding the issue's assumptions blindly — treating its list as a coverage checklist, not a literal spec.
 
 ### Code Changes
 
-- **Files modified:** [List]
-- **Key commits:** [Links to important commits]
-- **Approach decisions:** [Why you chose certain approaches]
+- **Files modified:** 
+Added test/__tests__/unit/portfolio/test-setup.test.ts
+- **Key commits:** 
+https://github.com/DollhouseMCP/mcp-server/commit/cfa016a666ef83c39ea55cb7cb24b1e9197d6ec2
+https://github.com/DollhouseMCP/mcp-server/commit/1d02cad18c1af541973f56922abf41eb287b3e10
+https://github.com/DollhouseMCP/mcp-server/commit/1ac93a2bca77480006a509fcb40bbed1d7a796f7
+https://github.com/DollhouseMCP/mcp-server/commit/b3cbe11c7d3558c1b7292e1861d1eb3bb22e2985
+https://github.com/DollhouseMCP/mcp-server/commit/3010ee5e12cec4e0f96ca5d4e91f1720e7b87925
+- **Approach decisions:**
+  - Tested real filesystem/env-var effects directly (`os.tmpdir()`, actual `HOME` mutation) instead of mocking `fs`/`os`/`process.env` — matched the existing convention in sibling specs (e.g. `EnhancedIndexManager.telemetry.test.ts`), and mocking would have hidden the exact class of side effects (temp-dir creation, `HOME` restoration) these tests exist to verify.
+  - Where the issue's suggested test description didn't match actual behavior (`resetSingletons()`'s dead `instance` cast, the flaky exact-count directory assertion), wrote tests against verified real behavior rather than encoding the issue's assumptions blindly — treated the issue's list as a coverage checklist to work through, not a literal spec.
+  - Asserted `created.length >= concurrency` plus a uniqueness check for the concurrent-directory-creation test instead of an exact count, since `os.tmpdir()` is a shared OS resource that other processes can write into during the test window — an exact-count assertion would be inherently flaky.
+  - Called `clearSuiteDirectory()` in `afterEach` and saved/restored `process.env.HOME` per test so the module-level suite-directory cache and the real `HOME` value never leak between tests — the same class of cross-test pollution [PR #1095](https://github.com/DollhouseMCP/mcp-server/pull/1095) was originally fixing.
+
 
 ---
 
