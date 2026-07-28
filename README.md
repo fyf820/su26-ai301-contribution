@@ -218,15 +218,35 @@ https://github.com/DollhouseMCP/mcp-server/commit/3010ee5e12cec4e0f96ca5d4e91f17
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when submitted]
+**PR Link:** 
+https://github.com/DollhouseMCP/mcp-server/pull/2377
 
-**PR Description:** [Draft or final PR description - much of the content above can be adapted]
+**PR Description:** 
+## Summary
+- Expanded unit test coverage in `tests/unit/portfolio/test-setup.test.ts` for the portfolio test setup utilities.
+- Added coverage for concurrent execution and error-handling behavior so shared test helpers are less likely to regress.
+- Strengthened assertions around cleanup, singleton resets, and test environment setup/teardown.
+
+## Issues
+[Add test coverage for test-setup.ts utilities #1096](https://github.com/DollhouseMCP/mcp-server/pull/1894)
+
+## Testing
+- [x] npm run lint
+- [x] npm test
+- manual: verified the branch only contains the intended test file change after cleaning generated/cache noise
+- manual: `npm run build` passed
+
+## Notes
+- This is a test-focused change; no production behavior was modified.
+- The branch was cleaned so the PR only includes the intended change in `tests/unit/portfolio/test-setup.test.ts`.
+- `npm run lint` and `npm test` currently fail due to existing unrelated repository issues, not this branch.
+- Potentially unrelated failures include `tests/unit/cli/console-token.test.ts`, `tests/unit/web/consoleAuth.test.ts`, and several broader telemetry/security/performance/Docker/timeout suites.
 
 **Maintainer Feedback:**
 - [Date]: [Summary of feedback received]
 - [Date]: [How you addressed it]
 
-**Status:** [Awaiting review / Iterating / Approved / Merged]
+**Status:** [Awaiting review x / Iterating / Approved / Merged]
 
 ---
 
