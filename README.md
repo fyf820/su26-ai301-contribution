@@ -3,7 +3,7 @@
 **Contribution Number:** 2  
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
-**Working Branch:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
+**Working Branch:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage  
 **Status:** Phase I Complete / Phase II Complete / Phase III Done / Phase IV In Progress 
 
 ---
