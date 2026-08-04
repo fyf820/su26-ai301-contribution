@@ -4,7 +4,7 @@
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
 **Working Branch:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
-**Status:** Phase I Complete / Phase II Complete / Phase III Done / Phase IV In Progress 
+**Status:** Phase I Complete / Phase II Complete / Phase III Complete / Phase IV In Progress 
 
 ---
 
@@ -39,11 +39,11 @@ Add unit tests covering: directory creation and structure (`.dollhouse/portfolio
 
 ### Acceptance Criteria (what "fixed" looks like)
 
-- [ ] Every function/scenario listed in issue #1096 has at least one corresponding unit test
-- [ ] Tests pass in isolation and when run in parallel with the rest of the suite (no shared-state leakage)
-- [ ] `HOME` is verifiably restored to its original value after both success and error paths
-- [ ] Suite-directory reuse vs. cleanup semantics are each covered by a dedicated test (not conflated)
-- [ ] New tests run cleanly in CI with no flake across repeated runs
+- [x] Every function/scenario listed in issue #1096 has at least one corresponding unit test
+- [x] Tests pass in isolation and when run in parallel with the rest of the suite (no shared-state leakage)
+- [x] `HOME` is verifiably restored to its original value after both success and error paths
+- [x] Suite-directory reuse vs. cleanup semantics are each covered by a dedicated test (not conflated)
+- [x] New tests run cleanly in CI with no flake across repeated runs (fixed the one flaky exact-count assertion during Week 8)
 
 ---
 
@@ -89,6 +89,54 @@ Pattern: test/__tests__/unit/portfolio/ - 0 matche
 ```
 - **My findings:**
 Confirmed test-setup.ts has zero direct test coverage; all four exported functions are exercised only indirectly through other suites that import them. Baseline npm test passes with N suites, M tests, 0 related to this file.
+
+**After — new spec passing in isolation:**
+```
+PS C:\Users\fyf08\OneDrive\Desktop\CODE\ai301\mcp-server> npm test -- tests/unit/portfolio/test-setup.test.ts
+
+> @dollhousemcp/mcp-server@2.0.38 test
+> cross-env "NODE_OPTIONS=$NODE_OPTIONS --experimental-vm-modules --no-warnings" jest --config tests/jest.config.cjs tests/unit/portfolio/test-setup.test.ts
+
+ PASS   Unit Tests  tests/unit/portfolio/test-setup.test.ts
+  test-setup utilities
+    setupTestEnvironment
+      √ creates a unique temporary directory (13 ms)
+      √ generates a unique directory name incorporating PID, timestamp, and random components (10 ms)
+      √ sets up the proper directory structure (.dollhouse/portfolio) (5 ms)
+      √ overrides the HOME environment variable correctly (6 ms)
+      √ returns the original HOME value (6 ms)
+      √ reuses the suite directory when reuseSuiteDirectory=true (6 ms)
+      √ creates a new directory when reuseSuiteDirectory=false (8 ms)
+    cleanupTestEnvironment
+      √ restores the original HOME environment variable (3 ms)
+      √ removes the temp directory when cleanupFiles=true (5 ms)
+      √ skips removal when cleanupFiles=false (5 ms)
+      √ does not delete the suite directory during individual test cleanup (4 ms)
+      √ handles cleanup errors gracefully (7 ms)
+    clearSuiteDirectory
+      √ removes the suite directory when cleanupFiles=true (5 ms)
+      √ resets the suite directory cache (8 ms)
+      √ handles a missing directory gracefully when no suite directory is active (2 ms)
+      √ handles cleanup errors gracefully when the suite directory was already removed (5 ms)
+    resetSingletons
+      √ successfully resets all singleton instances (53 ms)
+      √ works with the ES module dynamic import context (3 ms)
+      √ can be called multiple times in a row without error (2 ms)
+    parallel test execution
+      √ creates distinct, collision-free directories when called concurrently (16 ms)
+    error handling and recovery
+      √ remains usable after a consumer throws between setup and cleanup (11 ms)
+      √ does not delete the suite directory if a consumer throws before calling cleanup (6 ms)
+    environment variable restoration after errors
+      √ restores HOME via cleanupTestEnvironment even when the consumer throws (6 ms)
+      √ leaves HOME restorable even when the temp directory was already removed out-of-band (7 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       24 passed, 24 total
+Snapshots:   0 total
+Time:        1.485 s
+```
+Also ran against the full unit suite (`npm test`) afterward — no new failures introduced and no leakage into suites that import `test-setup.ts`; the only failures present were the pre-existing, unrelated ones noted in the PR description (`console-token.test.ts`, `consoleAuth.test.ts`, etc.).
 
 ---
 
@@ -228,7 +276,7 @@ https://github.com/DollhouseMCP/mcp-server/pull/2377
 - Strengthened assertions around cleanup, singleton resets, and test environment setup/teardown.
 
 ## Issues
-[Add test coverage for test-setup.ts utilities #1096](https://github.com/DollhouseMCP/mcp-server/pull/1894)
+[#1096](https://github.com/DollhouseMCP/mcp-server/issues/1096) (Add test coverage for test-setup.ts utilities)
 
 ## Testing
 - [x] npm run lint
@@ -243,10 +291,12 @@ https://github.com/DollhouseMCP/mcp-server/pull/2377
 - Potentially unrelated failures include `tests/unit/cli/console-token.test.ts`, `tests/unit/web/consoleAuth.test.ts`, and several broader telemetry/security/performance/Docker/timeout suites.
 
 **Maintainer Feedback:**
-- [Date]: [Summary of feedback received]
-- [Date]: [How you addressed it]
+- [07/28] (me, requesting review): "@mickdarling Hi, I'm not sure if you're the maintainer for this, but could you please take a look at my PR? Thank you!"
+- [07/31] (@mickdarling): "Yes, I'm the maintainer. Thanks a lot. I'll take a look at this. We're in the middle of a point release. But test infrastructure is helpful. Thank you." — no code changes requested, no follow-up commit needed.
+- [07/31] (@mickdarling): "Also, if you don't mind, could you please star the project? It helps show that there's engagement with it. I appreciate it. Thanks." — no code changes requested.
+- [08/04] (me, reply): "Thank you for taking the time to review it, I just starred the project." — action taken directly (starred the repo); no commit associated since the ask wasn't code-related.
 
-**Status:** [Awaiting review x / Iterating / Approved / Merged]
+**Status:** Awaiting review — PR is open against `DollhouseMCP:main`, maintainer has acknowledged it but review is pending due to an in-progress point release; no changes requested yet.
 
 ---
 
@@ -254,20 +304,26 @@ https://github.com/DollhouseMCP/mcp-server/pull/2377
 
 ### Technical Skills Gained
 
-[What you learned technically]
+- Testing real filesystem and environment-variable side effects (`os.tmpdir()`, `process.env.HOME` mutation) directly instead of mocking `fs`/`os`/`process.env` — and recognizing when mocking would actually hide the behavior a test exists to verify.
+- Diagnosing a subtle bug in my own test rather than the code under test: my first "reuses suite directory across calls" assertion (`home1 === home2`) was wrong because `setupTestEnvironment()` never restores `HOME` between calls, so I had to trace the actual control flow to fix the assertion rather than trust my initial mental model.
+- Writing concurrency-safe assertions for shared OS resources — moving from an exact-count check (`created.length === 8`) to a `>=` bound plus a uniqueness check once I understood `os.tmpdir()` is shared across unrelated processes, and documenting *why* in a comment so a future contributor doesn't "fix" it back to something flaky.
 
 ### Challenges Overcome
 
-[What was hard and how you solved it]
+- The issue's suggested test descriptions didn't always match the real implementation (the dead `instance` cast in `resetSingletons()`, no try/catch around its dynamic imports). Rather than writing tests that would pass against assumptions but not the real code, I treated the issue's list as a coverage checklist and adjusted each case to the verified behavior — flagging the mismatches explicitly instead of silently asserting something untrue.
+- A flaky concurrency test (expected exactly 8 new directories, got 24) forced me to understand *why* `os.tmpdir()` isn't exclusive to my test process, not just patch the assertion. Fixing it required a real root-cause read of the shared-resource behavior rather than loosening the assertion blindly.
+- Environment friction from working on Windows against docs written for bash/macOS (`ls -la ~/.dollhouse/` → `Get-ChildItem -Force ~\.dollhouse\`) and against outdated tool-schema docs (`dollhouse_config` documented as a standalone tool, actually an operation under `mcp_aql_read`). Used Claude Code to cross-check the actual tool schema against the docs rather than guessing at the right Inspector call shape.
 
 ### What I'd Do Differently Next Time
 
-[Reflection on your process]
+- Trace through the implementation's actual state-mutation behavior (what does/doesn't get restored, cached, or reset) *before* writing the first assertion, rather than writing the "obvious" assertion first and debugging it against the real behavior afterward — that would have caught the `HOME`-restoration bug in my own test earlier.
+- When a maintainer's issue text describes expected behavior, verify it against the source (e.g., grep for the property/cast in question) before scoping the test list, so mismatches surface during planning instead of mid-implementation.
+- Design concurrency/shared-resource assertions defensively from the start (bounds + uniqueness, not exact counts) instead of discovering the flake through a failing CI-style run.
 
 ---
 
 ## Resources Used
 
-- [Link to helpful documentation]
-- [Tutorial or Stack Overflow post that helped]
-- [GitHub issues or discussions that helped]
+- [PR #1095](https://github.com/DollhouseMCP/mcp-server/pull/1095) — the original test-isolation fix that introduced `test-setup.ts`; read to understand what cross-test pollution it was meant to prevent, since that constraint shaped how the new spec had to clean up after itself.
+- `CONTRIBUTING.md` (DollhouseMCP/mcp-server) — branch-naming convention (`feature/` prefix) and PR expectations.
+- Claude Code — used throughout to reconcile the project's Inspector/tool-schema docs with the actual current tool set, and to help trace `resetSingletons()`'s dynamic-import behavior against the issue's claims.
