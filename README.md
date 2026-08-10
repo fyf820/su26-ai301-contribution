@@ -4,7 +4,7 @@
 **Student:** Yifei Feng  
 **Issue:** [GitHub issue link](https://github.com/DollhouseMCP/mcp-server/issues/1096)  
 **Working Branch:** https://github.com/fyf820/mcp-server/tree/feature/1096-test-setup-utils-coverage
-**Status:** Phase I Complete / Phase II Complete / Phase III Complete / Phase IV In Progress 
+**Status:** Phase I Complete / Phase II Complete / Phase III Complete / Phase IV Complete
 
 ---
 
@@ -295,8 +295,18 @@ https://github.com/DollhouseMCP/mcp-server/pull/2377
 - [07/31] (@mickdarling): "Yes, I'm the maintainer. Thanks a lot. I'll take a look at this. We're in the middle of a point release. But test infrastructure is helpful. Thank you." — no code changes requested, no follow-up commit needed.
 - [07/31] (@mickdarling): "Also, if you don't mind, could you please star the project? It helps show that there's engagement with it. I appreciate it. Thanks." — no code changes requested.
 - [08/04] (me, reply): "Thank you for taking the time to review it, I just starred the project." — action taken directly (starred the repo); no commit associated since the ask wasn't code-related.
+- [08/05] (@mickdarling, full review): Reviewed the complete patch and all five commits; confirmed the PR stays scoped to the intended test file with no production/dependency/workflow changes, but declined to merge as-is. Substantive findings:
+  - **Unsafe concurrency-test cleanup boundary**: the test snapshots every `dollhouse-test-*` entry in the shared OS temp dir and later recursively deletes every newly observed matching directory — a concurrent Jest worker, another checkout, or another DollhouseMCP process could create a matching directory in between and have its live data deleted.
+  - **Non-deterministic uniqueness assertion**: `fs.readdir()` already returns unique entries, while unrelated processes can inflate the observed count — the assertion doesn't test what it claims to.
+  - **Cleanup-error tests don't exercise error handling**: they remove a directory then call `fs.rm(..., { force: true })`, but a missing path with `force: true` is expected to succeed, so the error path is never hit.
+  - **Cleanup ordering**: runs after assertions instead of in `finally`, so failed tests leak per-test temp directories.
+  - **`resetSingletons()` is stale across `main`/`beta`/`codex/hosted-http-integration`**: the referenced classes no longer expose the static singleton fields the helper casts and assigns, so asserting those newly-assigned properties are `null` doesn't demonstrate real state reset (this echoes what I'd already flagged as a dead cast during implementation — the drift has apparently gotten worse since).
+  - The original issue's dynamic-import-failure scenario is still not covered.
+  - PR description mismatch: linked issue text to the wrong PR (#1894, an unrelated streamable-HTTP PR) and marked lint/tests as passing when only SonarCloud had actually run.
+  - The original issue (#1096, written September 2025) has been superseded by **[#2453](https://github.com/DollhouseMCP/mcp-server/issues/2453)**, which preserves the coverage goal but adds current requirements: filesystem ownership, deterministic failure, concurrency safety, `HOME` restoration, a stale-helper audit, and cross-branch compatibility. Credited my contribution as the motivation for the new spec; invited me to revise this PR against #2453 or open a fresh PR — leaving this PR open in the meantime.
+- [08/09] (me, reply): Thanked the maintainer for the detailed commit-by-commit review and confirmed I'll look at #2453, asking whether they'd prefer I keep iterating on this PR or open a new one against the updated issue.
 
-**Status:** Awaiting review — PR is open against `DollhouseMCP:main`, maintainer has acknowledged it but review is pending due to an in-progress point release; no changes requested yet.
+**Status:** Iterating — maintainer completed a full review and declined to merge as-is; the original issue (#1096) was superseded by [#2453](https://github.com/DollhouseMCP/mcp-server/issues/2453) with stricter requirements (deterministic concurrency handling, real error-path coverage, `finally`-based cleanup, a stale-helper audit for `resetSingletons()`). I'm continuing this contribution against #2453 — next step is deciding with the maintainer whether to revise this PR in place or open a new one.
 
 ---
 
